@@ -1,0 +1,37 @@
+{
+  "name": "prompt-laboratory",
+  "version": "1.0.0",
+  "description": "个人Prompt实验室网站，用于展示和动态调试AI Prompt案例",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "prompt",
+    "AI",
+    "laboratory",
+    "debugging"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@headlessui/react": "^1.7.17",
+    "@heroicons/react": "^2.0.18",
+    "axios": "^1.5.0",
+    "highlight.js": "^11.8.0",
+    "marked": "^9.0.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.16.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.16",
+    "@vitejs/plugin-react": "^4.0.4",
+    "autoprefixer": "^10.4.15",
+    "postcss": "^8.4.29",
+    "tailwindcss": "^3.3.3",
+    "vite": "^4.4.9"
+  }
+}
