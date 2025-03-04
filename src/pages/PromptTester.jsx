@@ -17,7 +17,8 @@ export default function PromptTester() {
   const [prompt, setPrompt] = useState('');
   const [temperature, setTemperature] = useState(0.7);
   const [maxTokens, setMaxTokens] = useState(500);
-  const [model, setModel] = useState('gpt-3.5-turbo');
+  const [model, setModel] = useState('deepseek-chat');  // 修改默认模型
+  
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,7 +39,7 @@ export default function PromptTester() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.VITE_DEEPSEEK_API_KEY}`
+          'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
         },
         body: JSON.stringify({
           model: model,
@@ -115,9 +116,7 @@ ${aiResponse}
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
               >
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                <option value="gpt-4">GPT-4</option>
-                <option value="claude-2">Claude 2</option>
+                <option value="deepseek-chat">Deepseek Chat</option>
               </select>
             </div>
 

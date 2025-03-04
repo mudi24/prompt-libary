@@ -1,12 +1,12 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Disclosure } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const navigation = [
-  { name: '首页', href: '/', current: true },
-  { name: 'Prompt库', href: '/library', current: false },
-  { name: 'Prompt测试器', href: '/tester', current: false },
+  { name: '首页', href: '/' },
+  { name: 'Prompt库', href: '/library' },
+  { name: 'Prompt测试器', href: '/tester' },
 ];
 
 function classNames(...classes) {
@@ -14,6 +14,16 @@ function classNames(...classes) {
 }
 
 export default function Navbar() {
+  const location = useLocation();
+
+  // 根据当前路径判断当前页面
+  const getIsCurrentPage = (href) => {
+    if (href === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(href);
+  };
+
   return (
     <Disclosure as="nav" className="bg-white shadow">
       {({ open }) => (
@@ -30,12 +40,12 @@ export default function Navbar() {
                       key={item.name}
                       to={item.href}
                       className={classNames(
-                        item.current
+                        getIsCurrentPage(item.href)
                           ? 'border-indigo-500 text-gray-900'
                           : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
                         'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium'
                       )}
-                      aria-current={item.current ? 'page' : undefined}
+                      aria-current={getIsCurrentPage(item.href) ? 'page' : undefined}
                     >
                       {item.name}
                     </Link>
@@ -63,12 +73,12 @@ export default function Navbar() {
                   as={Link}
                   to={item.href}
                   className={classNames(
-                    item.current
+                    getIsCurrentPage(item.href)
                       ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
                       : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700',
                     'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'
                   )}
-                  aria-current={item.current ? 'page' : undefined}
+                  aria-current={getIsCurrentPage(item.href) ? 'page' : undefined}
                 >
                   {item.name}
                 </Disclosure.Button>
