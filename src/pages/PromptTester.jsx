@@ -35,11 +35,10 @@ export default function PromptTester() {
     setError('');
     
     try {
-      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      const response = await fetch('http://localhost:3001/api/chat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           model: model,
