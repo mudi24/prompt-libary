@@ -22,12 +22,87 @@ export default function PromptTester() {
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [optimizedPrompt, setOptimizedPrompt] = useState(null);
 
-  // 模拟API调用
+  const handleUseOptimizedPrompt = () => {
+    if (optimizedPrompt) {
+      setPrompt(optimizedPrompt);
+    }
+  };
+
+  const handleOptimizeClick = async () => {
+    if (!prompt.trim()) {
+      setError('请先输入提示词');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const response = await fetch('http://localhost:3001/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [{
+            role: 'user',
+            content: `作为一名提示词优化专家，请分析以下提示词并给出优化建议：
+
+${prompt}
+
+请从以下几个方面进行分析和优化：
+1. 提示词的完整性和结构性
+2. 角色定义是否清晰
+3. 任务描述是否明确
+4. 约束条件是否充分
+5. 输出要求是否具体
+6. 语言风格是否合适
+
+请给出：
+1. 总体评分（满分100分）和评价
+2. 具体的改进建议
+3. 优化后的提示词版本`
+          }],
+          temperature: 0.7,
+          max_tokens: 1000
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API请求失败: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const aiResponse = data.choices[0].message.content;
+
+      // 提取优化后的提示词
+      const optimizedPromptMatch = aiResponse.match(/优化后的提示词[：:]\s*([\s\S]+?)(?=\n\n|$)/i);
+      const extractedOptimizedPrompt = optimizedPromptMatch ? optimizedPromptMatch[1].trim() : null;
+      if (extractedOptimizedPrompt) {
+        setOptimizedPrompt(extractedOptimizedPrompt);
+      }
+
+      setResponse(`## 提示词优化建议
+
+${aiResponse}
+
+---
+**原始提示词：**
+${prompt}`);
+    } catch (err) {
+      setError(err.message || '优化请求失败，请稍后再试');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!prompt.trim()) {
-      setError('请输入提示词');
+      setError('请先输入提示词');
       return;
     }
 
@@ -56,29 +131,14 @@ export default function PromptTester() {
       }
 
       const data = await response.json();
-      const aiResponse = data.choices[0].message.content;
-
-      // 格式化响应为Markdown格式
-      const formattedResponse = `## AI响应
-
-${aiResponse}
-
----
-
-**使用的参数：**
-- 模型：${model}
-- 温度：${temperature}
-- 最大令牌数：${maxTokens}`;
-
-      setResponse(formattedResponse);
+      setResponse(data.choices[0].message.content);
     } catch (err) {
-      setError(err.message || '请求失败，请稍后再试');
+      setError(err.message || 'API请求失败，请稍后再试');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 将markdown转换为HTML
   const createMarkup = () => {
     return { __html: marked(response) };
   };
@@ -106,6 +166,27 @@ ${aiResponse}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
               />
+              <div className="flex gap-2 mt-2">
+                <button
+                  type="button"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  onClick={handleOptimizeClick}
+                >
+                  <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                  </svg>
+                  优化提示词
+                </button>
+                {optimizedPrompt && (
+                  <button
+                    type="button"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    onClick={handleUseOptimizedPrompt}
+                  >
+                    使用优化后的提示词
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="mb-6">
@@ -198,14 +279,71 @@ ${aiResponse}
 
       <div className="mt-12 bg-gray-50 p-6 rounded-lg border border-gray-200">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">提示词编写技巧</h2>
-        <ul className="list-disc pl-5 space-y-2">
-          <li>明确指定您希望AI扮演的角色（例如："作为一名经验丰富的营销专家..."）</li>
-          <li>提供清晰的上下文和背景信息</li>
-          <li>使用结构化格式，如列表或步骤</li>
-          <li>指定期望的输出格式（例如："请以表格形式回答"）</li>
-          <li>调整温度参数：较低的值使输出更加确定和一致，较高的值使输出更加多样和创造性</li>
-          <li>使用示例说明您期望的回答方式（少样本学习）</li>
-        </ul>
+        
+        {/* 角色定义技巧 */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium text-gray-800 mb-2">1. 角色定义</h3>
+          <ul className="list-disc pl-5 space-y-2 text-gray-600">
+            <li>明确指定AI扮演的专业角色（如："作为一名资深软件架构师..."）</li>
+            <li>提供角色的背景和专业领域（如："拥有10年金融科技经验..."）</li>
+            <li>设定角色的行为方式（如："请以严谨的学术风格回答..."）</li>
+          </ul>
+        </div>
+
+        {/* 任务描述技巧 */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium text-gray-800 mb-2">2. 任务描述</h3>
+          <ul className="list-disc pl-5 space-y-2 text-gray-600">
+            <li>使用清晰的任务动词（分析、评估、比较、总结等）</li>
+            <li>提供具体的上下文和背景信息</li>
+            <li>分步骤描述复杂任务（如："第一步...第二步..."）</li>
+            <li>指定任务的目标受众（如："面向非技术人员的解释..."）</li>
+          </ul>
+        </div>
+
+        {/* 约束条件技巧 */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium text-gray-800 mb-2">3. 约束条件</h3>
+          <ul className="list-disc pl-5 space-y-2 text-gray-600">
+            <li>设定输出的长度限制（如："不超过500字"）</li>
+            <li>指定专业度级别（如："使用通俗易懂的语言"或"使用专业术语"）</li>
+            <li>明确格式要求（如："使用markdown格式"）</li>
+            <li>设定语言风格（如："正式学术风格"或"轻松对话风格"）</li>
+          </ul>
+        </div>
+
+        {/* 输出结构技巧 */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium text-gray-800 mb-2">4. 输出结构</h3>
+          <ul className="list-disc pl-5 space-y-2 text-gray-600">
+            <li>使用结构化格式（列表、表格、大纲等）</li>
+            <li>要求特定的章节划分（如："包含背景、分析、建议三个部分"）</li>
+            <li>设定关键点数量（如："列出5个最重要的因素"）</li>
+            <li>要求具体的例子或案例说明</li>
+          </ul>
+        </div>
+
+        {/* 迭代优化技巧 */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium text-gray-800 mb-2">5. 迭代优化</h3>
+          <ul className="list-disc pl-5 space-y-2 text-gray-600">
+            <li>使用温度参数调整创造性（较低值获得确定性答案，较高值获得创造性答案）</li>
+            <li>通过示例说明期望的输出（少样本学习）</li>
+            <li>要求AI解释其推理过程</li>
+            <li>分步骤验证和改进输出结果</li>
+          </ul>
+        </div>
+
+        {/* 高级技巧 */}
+        <div>
+          <h3 className="text-lg font-medium text-gray-800 mb-2">6. 高级技巧</h3>
+          <ul className="list-disc pl-5 space-y-2 text-gray-600">
+            <li>使用"让我们一步一步思考"等提示词引导AI逐步推理</li>
+            <li>设置角色扮演场景（如："假设我们在进行代码审查..."）</li>
+            <li>使用评估标准（如："请基于可读性、性能、安全性进行评估"）</li>
+            <li>要求多角度分析（如："从技术和商业两个角度分析"）</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
