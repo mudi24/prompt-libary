@@ -197,6 +197,11 @@ ${prompt}`);
                 onChange={(e) => setModel(e.target.value)}
               >
                 <option value="deepseek-chat">Deepseek Chat</option>
+                <option value="deepseek-reasoner">Deepseek Reasoner</option>
+                <option value="Qwen/Qwen2.5-72B-Instruct">Qwen2.5-72B-Instruct</option>
+                <option value="Pro/THUDM/glm-4-9b-chat">glm-4-9b-chat</option>
+                {/* <option value="doubao-chat">豆包大模型</option> */}
+                {/* <option value="chatgpt">ChatGPT 3.5</option> */}
               </select>
             </div>
 
